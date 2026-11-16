@@ -1,0 +1,12 @@
+# What this port builds on: fetched at build time, never shipped.
+# Aria Maestosa 1.4.13 (GPL-2.0-or-later; libjdkmidi, irrXML and rtmidi in its tree have their own licences)
+ARIA_GIT=https://github.com/ariamaestosa/ariamaestosa.git
+ARIA_COMMIT=cc6b5ec0c62003edd7645f8f6946c29ba67be10e
+ARIA_VERSION=1.4.13
+# Our own pieces, fetched at these commits
+# GFOpenWX Toolkit main 0dc65bc (v1.0-rc4: wx 3.2.12, the z.library 53.12 glue fix)
+WXT_REPO=https://github.com/DalsinAI/gfopenwxtoolkit
+WXT_COMMIT=0dc65bca5f71d10f15f078ddac04b5d24829a155
+# fpuauto (common/fpuauto): the FPU when there is one
+FPA_REPO=https://github.com/DalsinAI/amicradle-guest
+FPA_COMMIT=4a784c84b878fe0e9abade7006e67e1ded9b165c

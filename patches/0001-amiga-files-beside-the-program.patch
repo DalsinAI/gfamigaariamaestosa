@@ -1,0 +1,86 @@
+diff --git a/Src/IO/IOUtils.cpp b/Src/IO/IOUtils.cpp
+index 458f393..95a87e3 100644
+--- a/Src/IO/IOUtils.cpp
++++ b/Src/IO/IOUtils.cpp
+@@ -194,6 +194,11 @@ wxString getResourcePrefix()
+             return wxStandardPaths::Get().GetResourcesDir() + wxT("/");
+         }
+         
++#elif defined(__amigaos__)
++
++        // Resources/ sits beside the program, in its drawer
++        return wxT("PROGDIR:Resources/");
++
+ #elif defined(__WXMSW__)
+     
+         static bool app_in_place = wxFileExists(
+diff --git a/Src/PreferencesData.cpp b/Src/PreferencesData.cpp
+index 2ab4a09..14d097c 100644
+--- a/Src/PreferencesData.cpp
++++ b/Src/PreferencesData.cpp
+@@ -81,7 +81,10 @@ wxString prefsDir;
+ 
+ PreferencesData::PreferencesData()
+ {
+-#ifdef __WXGTK__
++#if defined(__amigaos__)
++    // the settings stay in the program's drawer (User/), as its other files do
++    prefsDir = wxT("PROGDIR:User/");
++#elif defined(__WXGTK__)
+     prefsDir = wxStandardPaths::Get().GetUserConfigDir() + wxT("/.config/ariamaestosa/");
+ #else
+     prefsDir = wxStandardPaths::Get().GetUserConfigDir() + wxFileName::GetPathSeparator() +
+@@ -93,7 +96,12 @@ PreferencesData::PreferencesData()
+     wxFile f(prefsFile, wxFile::read_write);
+     if (not wxFileExists(prefsFile))
+     {
++#if defined(__amigaos__)
++        // "PROGDIR:User/" would be its parent's User drawer to CreateDir
++        if (not wxDirExists(wxT("PROGDIR:User")) and not wxMkdir(wxT("PROGDIR:User")))
++#else
+         if (not wxMkdir(prefsDir))
++#endif
+         {
+             fprintf(stderr, "Cannot create <%s>\n", (const char*)prefsDir.utf8_str());
+         }
+@@ -387,7 +395,12 @@ void PreferencesData::save()
+     wxFile f(prefsFile, wxFile::read_write);
+     if (not wxFileExists(prefsFile))
+     {
++#if defined(__amigaos__)
++        // "PROGDIR:User/" would be its parent's User drawer to CreateDir
++        if (not wxDirExists(wxT("PROGDIR:User")) and not wxMkdir(wxT("PROGDIR:User")))
++#else
+         if (not wxMkdir(prefsDir))
++#endif
+         {
+             fprintf(stderr, "Cannot create <%s>\n", (const char*)prefsDir.utf8_str());
+         }
+diff --git a/Src/PresetManager.cpp b/Src/PresetManager.cpp
+index b1e280a..96299cd 100644
+--- a/Src/PresetManager.cpp
++++ b/Src/PresetManager.cpp
+@@ -102,7 +102,11 @@ void PresetGroup::write(wxTextOutputStream* where)
+ 
+ void PresetGroup::read(PresetFactory presetFactory)
+ {
++    #if defined(__amigaos__)
++    wxString prefix = wxT("PROGDIR:User");
++#else
+     wxString prefix = wxStandardPaths::Get().GetUserDataDir();
++#endif
+ 
+     if (not wxFileExists(prefix + wxFileName::GetPathSeparator() + m_name + wxT(".ariapreset")))
+     {
+@@ -120,7 +124,11 @@ void PresetGroup::read(PresetFactory presetFactory)
+ 
+ void PresetGroup::write()
+ {
++    #if defined(__amigaos__)
++    wxString prefix = wxT("PROGDIR:User");
++#else
+     wxString prefix = wxStandardPaths::Get().GetUserDataDir();
++#endif
+     if (not wxDirExists(prefix))
+     {
+         // FIXME: wxMkDir is not consistent across platforms xD
