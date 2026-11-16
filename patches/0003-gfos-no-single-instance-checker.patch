@@ -1,0 +1,52 @@
+diff --git a/Src/main.cpp b/Src/main.cpp
+index 41cfcff..ce11a03 100644
+--- a/Src/main.cpp
++++ b/Src/main.cpp
+@@ -18,7 +18,9 @@
+ #include <wx/config.h>
+ #include <wx/msgdlg.h>
+ #include <wx/log.h>
++#ifndef __amigaos__
+ #include <wx/snglinst.h>
++#endif
+ #include <wx/ipc.h>      // IPC support
+ #include <wx/filename.h>
+ #include <wx/tokenzr.h>
+@@ -220,7 +222,9 @@ bool wxWidgetApp::OnInit()
+     
+     m_single_instance_checker = NULL;
+     
+-#ifndef __WXMAC__
++    /* GFOS: one Aria per user is not checked (no wxSingleInstanceChecker or
++     * IPC server in the toolkit); a second start opens a second window. */
++#if !defined(__WXMAC__) && !defined(__amigaos__)
+     m_single_instance_checker = new wxSingleInstanceChecker(appName + wxGetUserId(), wxT("/tmp/"));
+     
+     if ( prefs->getBoolValue(SETTING_ID_SINGLE_INSTANCE_APPLICATION, true) &&
+@@ -300,7 +304,7 @@ int wxWidgetApp::OnExit()
+ {
+     wxLogVerbose( wxT("wxWidgetsApp::OnExit") );
+ 
+-#ifndef __WXMAC__
++#if !defined(__WXMAC__) && !defined(__amigaos__)
+     wxDELETE(m_single_instance_checker);
+     delete m_IPC_server;
+ #endif
+@@ -364,6 +368,9 @@ void wxWidgetApp::OnUnhandledException()
+ 
+ bool wxWidgetApp::handleSingleInstance()
+ {
++#ifdef __amigaos__
++    return true;
++#else
+     wxClient client;
+     wxConnectionBase* conn = client.MakeConnection(wxEmptyString, IPC_APP_PORT, IPC_START);
+     
+@@ -389,6 +396,7 @@ bool wxWidgetApp::handleSingleInstance()
+     wxDELETE(conn);
+     
+     return true;
++#endif
+ }
+ 
+ 
