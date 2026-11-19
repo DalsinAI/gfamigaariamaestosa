@@ -109,20 +109,26 @@ O="$WORK/obj"; mkdir -p "$O"
 CXXF="$CF -std=gnu++17 $("$WXC" --cxxflags) -DRENDERER_WXWIDGETS -I$SRC/Src -I$SRC -I$SRC/libjdkmidi/include -I$SRC/rtmidi -I$HERE/amiga -Wno-deprecated-declarations -Wno-register"
 export CXXF CF O SRC HERE
 (cd "$SRC" && find . -name '*.cpp' ! -path './scons/*' ! -path './.git/*' | LC_ALL=C sort) > "$WORK/sources.txt"
-echo "$HERE/amiga/CamdMidiManager.cpp" >> "$WORK/sources.txt"
+echo "@amiga/CamdMidiManager.cpp" >> "$WORK/sources.txt"
+# Object names are made from logical source paths, not checkout paths.  The
+# manifest is also the complete link input: an orphan left by an older build
+# can never be counted as current or pulled into the executable.
+sed -e 's|^\./||' -e 's|^@||' -e 's|/|_|g' -e "s|^|$O/|" -e 's|$|.o|' \
+    "$WORK/sources.txt" > "$WORK/objects.txt"
 # one object per source, named by its path; kept when newer than the source
 left=$(( ${BUDGET_TOTAL:-840} - ($(date +%s) - t0) ))
 [ "$left" -gt 60 ] || { echo "no time left for Aria this run"; exit 0; }
 set +e
 timeout "$left" xargs -P "$JOBS" -I{} sh -c '
-    s={}; case "$s" in /*) f=$s ;; *) f=$SRC/${s#./} ;; esac
-    o=$O/$(echo "${s#./}" | tr "/" "_").o
+    s={}; case "$s" in @*) f=$HERE/${s#@}; k=${s#@} ;; *) f=$SRC/${s#./}; k=${s#./} ;; esac
+    o=$O/$(echo "$k" | tr "/" "_").o
     [ -f "$o" ] && [ "$o" -nt "$f" ] && exit 0
     nice -n 19 m68k-amigaos-g++ $CXXF -c "$f" -o "$o.tmp" > "$o.log" 2>&1 && mv "$o.tmp" "$o" && rm -f "$o.log"
 ' < "$WORK/sources.txt"
 rc=$?
 set -e
-nsrc=$(wc -l < "$WORK/sources.txt"); nobj=$(find "$O" -name '*.o' | wc -l)
+nsrc=$(wc -l < "$WORK/sources.txt"); nobj=0
+while IFS= read -r o; do [ ! -f "$o" ] || nobj=$((nobj + 1)); done < "$WORK/objects.txt"
 echo "compile: $nobj of $nsrc objects, $(( $(date +%s) - t0 )) s"
 fails=$(find "$O" -name '*.o.log' | LC_ALL=C sort)
 if [ -n "$fails" ]; then
@@ -136,9 +142,11 @@ for c in camd_smf camd_player amiga_stack; do
 done
 
 # --- the link: soft-float specs, then fpuauto's; our player's objects first ---
-# shellcheck disable=SC2046
+# shellcheck disable=SC2046,SC2086
+CAMDO="$O/amiga_CamdMidiManager.cpp.o"
+REST=$(grep -v -F -x "$CAMDO" "$WORK/objects.txt")
 m68k-amigaos-g++ -noixemul -m68040 -specs="$HERE/scripts/m68k-soft-m68040.specs" -specs="$FA/fpuauto.specs" -L"$FAL" \
-    -o "$O/AriaMaestosa.debug" "$O"/*CamdMidiManager.cpp.o $(ls "$O"/*.o | grep -v CamdMidiManager) \
+    -o "$O/AriaMaestosa.debug" "$CAMDO" $REST "$O"/amiga_c_*.o \
     $("$WXC" --libs std,aui,xml,net) > "$O/link.log" 2>&1 || { head -80 "$O/link.log"; exit 1; }
 
 # --- the GFOpenUp part: Parts/AriaMaestosa ------------------------------------

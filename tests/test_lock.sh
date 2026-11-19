@@ -14,6 +14,8 @@ grep -q 'os32-gcc16-open8' "$HERE/../build-amiga.sh" || { echo "FAIL: open8 is n
 grep -q 'TOOLCHAIN_ID=' "$HERE/../build-amiga.sh" || { echo "FAIL: build cache does not identify the toolchain"; fail=1; }
 grep -q 'OBJREV=.*TOOLCHAIN_ID' "$HERE/../build-amiga.sh" || { echo "FAIL: Aria object cache ignores the toolchain"; fail=1; }
 grep -q 'WXREV=.*TOOLCHAIN_ID' "$HERE/../build-amiga.sh" || { echo "FAIL: toolkit cache ignores the toolchain"; fail=1; }
+grep -q 'objects.txt' "$HERE/../build-amiga.sh" || { echo "FAIL: linker has no current-object manifest"; fail=1; }
+grep -q '@amiga/CamdMidiManager.cpp' "$HERE/../build-amiga.sh" || { echo "FAIL: project object name depends on checkout path"; fail=1; }
 if [ "${ARIA_SRC:-}" ]; then
     T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
     cp -R "$ARIA_SRC/." "$T/"
