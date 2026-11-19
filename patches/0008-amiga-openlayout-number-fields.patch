@@ -1,0 +1,17 @@
+diff --git a/Src/GUI/MainFrame.h b/Src/GUI/MainFrame.h
+index 4b8643f..1fa40a2 100644
+--- a/Src/GUI/MainFrame.h
++++ b/Src/GUI/MainFrame.h
+@@ -49,9 +49,11 @@ class wxStaticBitmap;
+ class wxTimer;
+ class wxTimerEvent;
+ 
+-#ifdef __WXMAC__
++#if defined(__WXMAC__) || defined(__amigaos__)
+ #include <wx/textctrl.h>
++#ifdef __WXMAC__
+ #include <wx/valnum.h>
++#endif
+ // workaround until wxWidgets bug #15016 is fixed
+ class wxWorkaroundSpinCtrl : public wxTextCtrl
+ {

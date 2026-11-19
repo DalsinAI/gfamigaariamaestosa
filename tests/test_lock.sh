@@ -30,6 +30,7 @@ if [ "${ARIA_SRC:-}" ]; then
     grep -q 'wxSYS_COLOUR_WINDOW' "$T/Src/Renderers/wxRenderPane.cpp" || { echo "FAIL: Amiga editor surface does not follow the shared theme"; fail=1; }
     grep -q 'defined(__WXGTK__) || defined(__amigaos__)' "$T/Src/GUI/MainFrame.h" || { echo "FAIL: Amiga toolbar bypasses OpenLayout controls"; fail=1; }
     grep -q 'wxBitmapToggleButton' "$T/Src/GUI/MainFrame.cpp" || { echo "FAIL: Amiga loop control is not an OpenLayout toggle"; fail=1; }
+    grep -q 'defined(__WXMAC__) || defined(__amigaos__)' "$T/Src/GUI/MainFrame.h" || { echo "FAIL: Amiga numeric fields use unsupported composite spin controls"; fail=1; }
     # the Amiga RtMidi section compiles (host, as the Amiga build has no other backend)
     ${CXX:-c++} -std=gnu++17 -D__amigaos__ -fsyntax-only -I"$T/rtmidi" "$T/rtmidi/RtMidi.cpp" || { echo "FAIL: RtMidi.cpp"; fail=1; }
 fi
