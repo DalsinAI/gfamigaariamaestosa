@@ -10,6 +10,10 @@ for c in "$ARIA_COMMIT" "$WXT_COMMIT" "$FPA_COMMIT"; do
     echo "$c" | grep -qE '^[0-9a-f]{40}$' || { echo "FAIL: not a full commit: $c"; fail=1; }
 done
 grep -q "\$VER: AriaMaestosa $ARIA_VERSION (" "$HERE/../amiga/amiga_stack.c" || { echo "FAIL: \$VER is not $ARIA_VERSION"; fail=1; }
+grep -q 'os32-gcc16-open8' "$HERE/../build-amiga.sh" || { echo "FAIL: open8 is not the default stove"; fail=1; }
+grep -q 'TOOLCHAIN_ID=' "$HERE/../build-amiga.sh" || { echo "FAIL: build cache does not identify the toolchain"; fail=1; }
+grep -q 'OBJREV=.*TOOLCHAIN_ID' "$HERE/../build-amiga.sh" || { echo "FAIL: Aria object cache ignores the toolchain"; fail=1; }
+grep -q 'WXREV=.*TOOLCHAIN_ID' "$HERE/../build-amiga.sh" || { echo "FAIL: toolkit cache ignores the toolchain"; fail=1; }
 if [ "${ARIA_SRC:-}" ]; then
     T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
     cp -R "$ARIA_SRC/." "$T/"

@@ -3,7 +3,7 @@
 # 68040, soft float with the FPU taken when there is one (fpuauto), on the
 # GFOpenWX Toolkit, with wx's own drawing (no OpenGL, no GFOpenGPU) and a
 # CAMD player of our own (amiga/).
-#   STOVE=.../stoves/os32-gcc16-open6 OUT=out ./build-amiga.sh
+#   STOVE=.../stoves/os32-gcc16-open8 OUT=out ./build-amiga.sh
 #   (WXT_SRC=... to use a toolkit tree already on disk)
 # Aria, the toolkit and fpuauto are fetched at the commits aria.lock gives;
 # nothing third-party is kept here. The build tree is kept, so a run that
@@ -15,13 +15,14 @@
 set -eu
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 . "$HERE/aria.lock"
-STOVE=${STOVE:-"$HOME/AmiCradle/stoves/os32-gcc16-open6"}
+STOVE=${STOVE:-"$HOME/AmiCradle/kitchen/stoves/os32-gcc16-open8"}
 # outside the checkout: Cradle cleans it (git clean -ffdx) before every job
 WORK="${WORK:-$HOME/.cache/gfamigaariamaestosa/build}"; OUT="${OUT:-$WORK/out}"; JOBS=${JOBS:-12}
 TC="$STOVE/prefix"; PATH="$TC/bin:$PATH"; export PATH
 mkdir -p "$WORK/deps" "$OUT"; OUT=$(cd "$OUT" && pwd)
 t0=$(date +%s)
 m68k-amigaos-gcc --version | head -n 1
+TOOLCHAIN_ID=$(printf '%s\n%s\n' "$(readlink -f "$TC")" "$(m68k-amigaos-gcc -dumpfullversion -dumpversion)" | sha256sum | cut -c1-16)
 
 # a repository at one commit, fetched once (SPARSE: only those folders)
 fetch() {
@@ -44,7 +45,7 @@ fetch() {
 # --- the toolkit's SDK, again only when its tree changed ---------------------
 if [ -z "${WXT_SRC:-}" ]; then fetch gfopenwxtoolkit "$WXT_REPO" "$WXT_COMMIT"; WXT_SRC="$WORK/deps/gfopenwxtoolkit"; fi
 WXB="$WORK/gfopenwx"
-WXREV=$( (git -C "$WXT_SRC" rev-parse HEAD 2>/dev/null; git -C "$WXT_SRC" diff HEAD 2>/dev/null) | sha256sum | cut -c1-16)
+WXREV=$( (git -C "$WXT_SRC" rev-parse HEAD 2>/dev/null; git -C "$WXT_SRC" diff HEAD 2>/dev/null; printf '%s\n' "$TOOLCHAIN_ID") | sha256sum | cut -c1-16)
 if [ ! -x "$WXB/out/sdk/bin/wx-config" ] || [ "$(cat "$WXB/out/.rev" 2>/dev/null)" != "$WXREV" ]; then
     # stopped here, before Cradle's own cap, so the log says how far it got
     set +e
@@ -94,9 +95,10 @@ if [ "$(cat "$SRC/.patched" 2>/dev/null)" != "$ARIA_COMMIT-$PSUM" ]; then
 fi
 # objects made against another toolkit commit go: its headers are not in
 # the rules, and stale objects crash at start (gfamigagolly #3)
-if [ "$(cat "$WORK/.toolkit-objs" 2>/dev/null)" != "$WXT_COMMIT" ]; then
+OBJREV="$WXT_COMMIT-$TOOLCHAIN_ID"
+if [ "$(cat "$WORK/.toolkit-objs" 2>/dev/null)" != "$OBJREV" ]; then
     rm -rf "$WORK/obj"
-    echo "$WXT_COMMIT" > "$WORK/.toolkit-objs"
+    echo "$OBJREV" > "$WORK/.toolkit-objs"
 fi
 
 # --- compile: every .cpp of Aria's tree (as its SConstruct), ours from amiga/ -
