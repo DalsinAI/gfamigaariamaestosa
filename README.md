@@ -23,6 +23,8 @@ puts it in `SYS:Utilities/AriaMaestosa`. Its settings and presets are kept in th
 - Drawing is wxWidgets' own (`RENDERER_WXWIDGETS`): no OpenGL, no GFOpenGPU.
 - Resources sit beside the program (`PROGDIR:Resources/`), settings in `PROGDIR:User/` (patch 0001).
 - RtMidi has an Amiga section reporting no ports (patch 0002).
+- GFOpenWX's first window show is initialised explicitly, so the editor and command-line song loader run (patch 0004).
+- The Amiga build selects CAMD even when an old cross-platform `No Sound` preference remains (patch 0005).
 
 ## Building
 
@@ -34,6 +36,9 @@ or in Cradle, `stove_build` with the os32-gcc16-open8 stove and target `.`. Aria
 
     make -C tests test                 # SMF parser, Part file, lock
     make -C tests test ARIA_SRC=<aria checkout at the lock's commit>   # also applies the patches
+
+The current clean-build and native AkikoPlus byte-path receipt is in
+[`docs/OPEN8-AKIKOPLUS-QUALIFICATION-20261119.md`](docs/OPEN8-AKIKOPLUS-QUALIFICATION-20261119.md).
 
 ## Licence
 
