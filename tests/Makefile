@@ -4,6 +4,7 @@ CFLAGS ?= -std=c99 -Wall -Wextra -Werror -O1 -fsanitize=address,undefined
 test: test_camd_smf
 	./test_camd_smf
 	sh test-part.sh
+	sh test-package.sh
 	sh test_lock.sh
 test_camd_smf: test_camd_smf.c ../amiga/camd_smf.c ../amiga/camd_smf.h
 	$(CC) $(CFLAGS) -I../amiga -o $@ test_camd_smf.c ../amiga/camd_smf.c

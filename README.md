@@ -12,9 +12,15 @@ Designed, tested and delivered by The AmiCradle Team.
 
 ## Install
 
+For a release candidate, unpack `gfamigaariamaestosa-*-part.tar.gz`, then:
+
     GFOpenUpTool INSTALL Parts/AriaMaestosa
 
 puts it in `SYS:Utilities/AriaMaestosa`. Its settings and presets are kept in that drawer's `User` drawer.
+
+The release archive also carries `PART.json` (the exact source commit and
+binary digest) and `SHA256SUMS` is published beside it. This keeps the file
+being tested tied to the source and clean Open8 build that produced it.
 
 ## What is different on the Amiga
 
@@ -31,6 +37,10 @@ puts it in `SYS:Utilities/AriaMaestosa`. Its settings and presets are kept in th
     STOVE=.../stoves/os32-gcc16-open8 OUT=out ./build-amiga.sh
 
 or in Cradle, `stove_build` with the os32-gcc16-open8 stove and target `.`. Aria Maestosa, the GFOpenWX Toolkit and fpuauto are fetched at the commits in `aria.lock`; nothing third-party is kept here. A run stops at 840 s and goes on next time (the toolkit takes about two runs the first time). The cache includes the resolved stove and compiler version, so changing compilers cannot reuse stale toolkit or Aria objects.
+
+After a complete build, make an installable candidate with:
+
+    ./package.sh out dist 1.4.13-rc1 <full-source-commit>
 
 ## Tests
 
