@@ -1,0 +1,98 @@
+diff --git a/rtmidi/RtMidi.cpp b/rtmidi/RtMidi.cpp
+index 4ef98b1..ab85b02 100644
+--- a/rtmidi/RtMidi.cpp
++++ b/rtmidi/RtMidi.cpp
+@@ -2828,3 +2828,93 @@ void RtMidiOut :: sendMessage( std::vector<unsigned char> *message )
+ }
+ 
+ #endif  // __LINUX_JACK__
++
++//*********************************************************************//
++//  API: AmigaOS (Aria Maestosa for GFOS)
++//
++//  Playback goes through CAMD in Aria's own player
++//  (CamdMidiManager.cpp); this port has no MIDI input, so RtMidi
++//  reports no ports and openPort() warns. AmiCradle Team, 2026.
++//*********************************************************************//
++
++#if defined(__amigaos__)
++
++void RtMidiIn :: initialize( const std::string& /*clientName*/ )
++{
++  apiData_ = 0;
++}
++
++void RtMidiIn :: openPort( unsigned int /*portNumber*/, const std::string /*portName*/ )
++{
++  errorString_ = "RtMidiIn::openPort: MIDI input is not in the Amiga version.";
++  error( RtError::WARNING );
++}
++
++void RtMidiIn :: openVirtualPort( const std::string /*portName*/ )
++{
++  errorString_ = "RtMidiIn::openVirtualPort: MIDI input is not in the Amiga version.";
++  error( RtError::WARNING );
++}
++
++void RtMidiIn :: closePort( void )
++{
++  connected_ = false;
++}
++
++RtMidiIn :: ~RtMidiIn()
++{
++  closePort();
++  if ( inputData_.queue.ringSize > 0 ) delete [] inputData_.queue.ring;
++}
++
++unsigned int RtMidiIn :: getPortCount()
++{
++  return 0;
++}
++
++std::string RtMidiIn :: getPortName( unsigned int /*portNumber*/ )
++{
++  return std::string();
++}
++
++unsigned int RtMidiOut :: getPortCount()
++{
++  return 0;
++}
++
++std::string RtMidiOut :: getPortName( unsigned int /*portNumber*/ )
++{
++  return std::string();
++}
++
++void RtMidiOut :: initialize( const std::string& /*clientName*/ )
++{
++  apiData_ = 0;
++}
++
++void RtMidiOut :: openPort( unsigned int /*portNumber*/, const std::string /*portName*/ )
++{
++  errorString_ = "RtMidiOut::openPort: Aria plays through CAMD on the Amiga, not RtMidi.";
++  error( RtError::WARNING );
++}
++
++void RtMidiOut :: closePort( void )
++{
++  connected_ = false;
++}
++
++void RtMidiOut :: openVirtualPort( const std::string /*portName*/ )
++{
++  errorString_ = "RtMidiOut::openVirtualPort: not in the Amiga version.";
++  error( RtError::WARNING );
++}
++
++RtMidiOut :: ~RtMidiOut()
++{
++}
++
++void RtMidiOut :: sendMessage( std::vector<unsigned char>* /*message*/ )
++{
++}
++
++#endif  // __amigaos__

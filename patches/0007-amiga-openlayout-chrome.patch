@@ -1,0 +1,126 @@
+diff --git a/Src/GUI/MainFrame.cpp b/Src/GUI/MainFrame.cpp
+index 4f725d4..6332195 100644
+--- a/Src/GUI/MainFrame.cpp
++++ b/Src/GUI/MainFrame.cpp
+@@ -72,6 +72,7 @@
+ #include <wx/log.h>
+ #include <wx/tglbtn.h>
+ #include <wx/hyperlink.h>
++#include <wx/settings.h>
+ #include <wx/timer.h>
+ #include <wx/stdpaths.h>
+ 
+@@ -212,7 +213,14 @@ void CustomToolBar::realize()
+ // my generic toolbar
+ CustomToolBar::CustomToolBar(wxWindow* parent) : wxPanel(parent, wxID_ANY)
+ {
++#ifdef __amigaos__
++    // GFOpenWX maps these real controls to OpenLayout widgets.  Keep the
++    // shared Chrome rhythm instead of the desktop fallback's wide gaps.
++    toolbarSizer = new wxFlexGridSizer(2, 100, 4, 4);
++    SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
++#else
+     toolbarSizer = new wxFlexGridSizer(2, 100, 1, 15);
++#endif
+     SetSizer(toolbarSizer);
+     m_is_realized = false;
+ }
+@@ -224,7 +232,11 @@ void CustomToolBar::ClearTools()
+     label_ids.clear();
+     label_widgets.clear();
+     SetSizer(NULL); // also deletes the previous sizer
++#ifdef __amigaos__
++    toolbarSizer = new wxFlexGridSizer(2, 100, 4, 4);
++#else
+     toolbarSizer = new wxFlexGridSizer(2, 100, 1, 15);
++#endif
+     SetSizer(toolbarSizer);
+     m_is_realized = false;
+ }
+@@ -242,9 +254,16 @@ void CustomToolBar::SetLabelById(const int id, wxString label)
+ }
+ void CustomToolBar::AddTool(const int id, wxString label, wxBitmap& bmp)
+ {
++#ifdef __amigaos__
++    wxBitmapButton* btn = new wxBitmapButton(this, id, bmp, wxDefaultPosition, wxDefaultSize,
++                                             wxBU_AUTODRAW);
++    btn->SetToolTip(label);
++    toolbarSizer->Add(btn, 0, wxALIGN_CENTER | wxALIGN_CENTER_VERTICAL | wxALL, 2);
++#else
+     wxBitmapButton* btn = new wxBitmapButton(this, id, bmp, wxDefaultPosition, wxDefaultSize,
+                                              wxBU_AUTODRAW | wxBORDER_NONE);
+     toolbarSizer->Add(btn, 0, wxALIGN_CENTER | wxALIGN_CENTER_VERTICAL | wxALL, 5);
++#endif
+     labels.push_back(label);
+     label_ids.push_back(id);
+ }
+@@ -253,7 +272,12 @@ void CustomToolBar::AddCheckTool(const int id, wxString label, wxBitmap& bmp, bo
+ {
+     wxBitmapToggleButton* btn = new wxBitmapToggleButton(this, id, bmp);
+     btn->SetValue(checked);
++#ifdef __amigaos__
++    btn->SetToolTip(label);
++    toolbarSizer->Add(btn, 0, wxALIGN_CENTER | wxALIGN_CENTER_VERTICAL | wxALL, 2);
++#else
+     toolbarSizer->Add(btn, 0, wxALIGN_CENTER | wxALIGN_CENTER_VERTICAL | wxALL, 5);
++#endif
+     labels.push_back(label);
+     label_ids.push_back(id);
+ }
+@@ -287,7 +311,11 @@ void CustomToolBar::AddStretchableSpace()
+ 
+ void CustomToolBar::add(wxControl* ctrl, wxString label)
+ {
++#ifdef __amigaos__
++    toolbarSizer->Add(ctrl, 0, wxALIGN_CENTER | wxALIGN_CENTER_VERTICAL | wxALL, 2);
++#else
+     toolbarSizer->Add(ctrl, 0, wxALIGN_CENTER | wxALIGN_CENTER_VERTICAL | wxALL, 5);
++#endif
+     labels.push_back(label);
+     label_ids.push_back(ctrl->GetId());
+ }
+@@ -307,6 +335,9 @@ void CustomToolBar::realize()
+     for (int n=0; n<label_amount; n++)
+     {
+         wxStaticText* label_widget = new wxStaticText(this, wxID_ANY, labels[n]);
++#ifdef __amigaos__
++        label_widget->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
++#endif
+         label_widgets.push_back(label_widget);
+         toolbarSizer->Add(label_widget, 0, wxALIGN_CENTER | wxALIGN_CENTER_VERTICAL | wxALL, 1);
+     }
+diff --git a/Src/GUI/MainFrame.h b/Src/GUI/MainFrame.h
+index 334ec25..4b8643f 100644
+--- a/Src/GUI/MainFrame.h
++++ b/Src/GUI/MainFrame.h
+@@ -227,7 +227,7 @@ namespace AriaMaestosa
+ #define MAKE_HIDE_PROGRESSBAR_EVENT(eventname) wxCommandEvent eventname( wxEVT_HIDE_WAIT_WINDOW, HIDE_WAIT_WINDOW_EVENT_ID )
+ #define MAKE_ASYNC_ERR_MESSAGE_EVENT(eventname) wxCommandEvent eventname( wxEVT_ASYNC_ERROR_MESSAGE, ASYNC_ERR_MESSAGE_EVENT_ID )
+ 
+-#ifdef __WXGTK__
++#if defined(__WXGTK__) || defined(__amigaos__)
+ #define NO_WX_TOOLBAR
+ #endif
+ 
+diff --git a/Src/Renderers/wxRenderPane.cpp b/Src/Renderers/wxRenderPane.cpp
+index d50f03b..9a13f6f 100644
+--- a/Src/Renderers/wxRenderPane.cpp
++++ b/Src/Renderers/wxRenderPane.cpp
+@@ -40,6 +40,6 @@ wxRenderPane::wxRenderPane(wxWindow* parent, int* args) :
+     SetBackgroundStyle(wxBG_STYLE_CUSTOM);
+ #endif
+ #ifdef __amigaos__
+-    SetBackgroundColour(wxColour(232, 235, 240));
++    SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+ #endif
+ }
+@@ -93,7 +93,8 @@ void wxRenderPane::beginFrame()
+ {
+ #ifdef __amigaos__
+     // A neutral work surface instead of a large black void below short songs.
+-    Display::renderDC -> SetBackground( wxBrush(wxColour(232, 235, 240)) );
++    Display::renderDC -> SetBackground(
++        wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)) );
+ #else
+     Display::renderDC -> SetBackground( *wxBLACK_BRUSH );
+ #endif

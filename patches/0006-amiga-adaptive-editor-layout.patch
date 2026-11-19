@@ -1,0 +1,93 @@
+diff --git a/Src/GUI/MainFrame.cpp b/Src/GUI/MainFrame.cpp
+index ec40f29..425ec4f 100644
+--- a/Src/GUI/MainFrame.cpp
++++ b/Src/GUI/MainFrame.cpp
+@@ -357,6 +357,31 @@ MainFrame::MainFrame() : wxFrame(NULL, wxID_ANY, wxT("Aria Maestosa"), wxPoint
+ 
+ #undef ARIA_WINDOW_FLAGS
+ 
++#ifdef __amigaos__
++/** Use the available editor area for a one-track song.  Desktop Aria keeps
++  * every track at 128 pixels until the user presses its maximise button;
++  * that leaves most of a high-resolution Amiga screen empty.  The normal
++  * maximise control remains available to return to the compact layout. */
++static void fitSingleTrackToWindow(MainFrame* frame)
++{
++    GraphicalSequence* sequence = frame->getCurrentGraphicalSequence();
++    if (sequence == NULL || sequence->getTrackAmount() != 1 ||
++        sequence->isTrackMaximized())
++    {
++        return;
++    }
++
++    GraphicalTrack* track = sequence->getCurrentTrack();
++    if (track == NULL) return;
++
++    sequence->setYScroll(0);
++    sequence->setTrackMaximized(true);
++    track->maximizeHeight();
++    frame->updateVerticalScrollbar();
++    Display::render();
++}
++#endif
++
+ // ----------------------------------------------------------------------------------------------------------
+ 
+ MainFrame::~MainFrame()
+@@ -1829,6 +1851,9 @@ void MainFrame::addSequence(bool showSongPropertiesDialog)
+         updateMenuBarToSequence();
+         Display::render();
+         getMainFrame()->updateUndoMenuLabel();
++#ifdef __amigaos__
++        if (showSongPropertiesDialog) fitSingleTrackToWindow(this);
++#endif
+     }
+    
+ }
+@@ -2070,6 +2095,9 @@ void MainFrame::loadAriaFile(const wxString& filePath)
+         return;
+     }
+ 
++#ifdef __amigaos__
++    fitSingleTrackToWindow(this);
++#endif
+     //WaitWindow::hide();
+     updateVerticalScrollbar();
+ 
+@@ -2119,6 +2147,9 @@ void MainFrame::loadMidiFile(const wxString& filePath)
+     }
+ 
+     WaitWindow::hide();
++#ifdef __amigaos__
++    fitSingleTrackToWindow(this);
++#endif
+     updateVerticalScrollbar();
+ 
+     // change song name
+diff --git a/Src/Renderers/wxRenderPane.cpp b/Src/Renderers/wxRenderPane.cpp
+index 93cab13..d50f03b 100644
+--- a/Src/Renderers/wxRenderPane.cpp
++++ b/Src/Renderers/wxRenderPane.cpp
+@@ -39,6 +39,9 @@ wxRenderPane::wxRenderPane(wxWindow* parent, int* args) :
+ #else
+     SetBackgroundStyle(wxBG_STYLE_CUSTOM);
+ #endif
++#ifdef __amigaos__
++    SetBackgroundColour(wxColour(232, 235, 240));
++#endif
+ }
+ 
+ // ----------------------------------------------------------------------------------------------------------
+@@ -88,7 +91,12 @@ bool wxRenderPane::prepareFrame()
+ 
+ void wxRenderPane::beginFrame()
+ {
++#ifdef __amigaos__
++    // A neutral work surface instead of a large black void below short songs.
++    Display::renderDC -> SetBackground( wxBrush(wxColour(232, 235, 240)) );
++#else
+     Display::renderDC -> SetBackground( *wxBLACK_BRUSH );
++#endif
+     Display::renderDC -> Clear();
+ }
+ 

@@ -1,0 +1,18 @@
+diff --git a/Src/Midi/Players/PlatformMidiManager.cpp b/Src/Midi/Players/PlatformMidiManager.cpp
+index 505f796..b482e4b 100644
+--- a/Src/Midi/Players/PlatformMidiManager.cpp
++++ b/Src/Midi/Players/PlatformMidiManager.cpp
+@@ -68,6 +68,12 @@ PlatformMidiManager* PlatformMidiManager::get()
+     {
+         wxString preferredMidiDriver = PreferencesData::getInstance()->getValue(SETTING_ID_MIDI_DRIVER);
+ 
++#ifdef __amigaos__
++        /* CAMD is the Amiga platform MIDI service.  Do not let a stale
++         * cross-platform "No Sound" preference silently disable it. */
++        preferredMidiDriver = wxT("CAMD");
++#endif
++
+         const int count = g_all_midi_managers->size();
+         for (int n=0; n<count; n++)
+         {
+
