@@ -14,6 +14,7 @@
 #include <wx/timer.h>
 #include <wx/intl.h>
 #include <cstdlib>
+#include <cstdio>
 
 #include "camd_player.h"
 
@@ -61,14 +62,28 @@ namespace AriaMaestosa
             int songlength = -1, len = -1;
             char* data = NULL;
             allocAsMidiBytes(sequence, selection_only, &songlength, startTick, &data, &len, true);
-            if (data == NULL or len <= 0) return false;
+            if (data == NULL or len <= 0)
+            {
+                std::fprintf(stderr, "[CAMD] Aria produced no playable SMF (data=%p, length=%d)\n",
+                             (void*)data, len);
+                return false;
+            }
             amp_song song;
             amp_free(&m_map);
-            const bool ok = amp_parse((const uint8_t*)data, (uint32_t)len, &song) == AMP_OK and
-                            amp_parse((const uint8_t*)data, (uint32_t)len, &m_map) == AMP_OK;
+            const int song_result = amp_parse((const uint8_t*)data, (uint32_t)len, &song);
+            const int map_result = song_result == AMP_OK
+                ? amp_parse((const uint8_t*)data, (uint32_t)len, &m_map) : song_result;
             free(data);
-            if (not ok) { amp_free(&song); amp_free(&m_map); return false; }
+            if (song_result != AMP_OK or map_result != AMP_OK)
+            {
+                std::fprintf(stderr, "[CAMD] SMF parser rejected Aria output (song=%d, map=%d, length=%d)\n",
+                             song_result, map_result, len);
+                amp_free(&song); amp_free(&m_map); return false;
+            }
             m_was_playing = acp_play(&song) != 0;
+            if (not m_was_playing)
+                std::fprintf(stderr, "[CAMD] player did not start (%lu events, %lu us)\n",
+                             (unsigned long)m_map.n, (unsigned long)m_map.end_us);
             return m_was_playing;
         }
 
