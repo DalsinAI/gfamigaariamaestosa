@@ -24,6 +24,7 @@ if [ "${ARIA_SRC:-}" ]; then
     for p in "$HERE"/../patches/*.patch; do patch -s -d "$T" -p1 < "$p" || { echo "FAIL: $p"; fail=1; }; done
     grep -q 'PROGDIR:Resources/' "$T/Src/IO/IOUtils.cpp" || { echo "FAIL: resources path"; fail=1; }
     grep -q '#if defined(__amigaos__)' "$T/rtmidi/RtMidi.cpp" || { echo "FAIL: rtmidi section"; fail=1; }
+    grep -q 'defined(__WXMSW__) || defined(__amigaos__)' "$T/Src/GUI/MainFrame.cpp" || { echo "FAIL: GFOpenWX first-show initialisation"; fail=1; }
     # the Amiga RtMidi section compiles (host, as the Amiga build has no other backend)
     ${CXX:-c++} -std=gnu++17 -D__amigaos__ -fsyntax-only -I"$T/rtmidi" "$T/rtmidi/RtMidi.cpp" || { echo "FAIL: RtMidi.cpp"; fail=1; }
 fi
