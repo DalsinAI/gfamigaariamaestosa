@@ -8,7 +8,7 @@ Designed, tested and delivered by The AmiCradle Team.
 
 - GFOS: AmigaOS 3.2.3 with GFOpenUp, and the GFOpenWX Toolkit (openwxtoolkit.library) it ships.
 - A 68040 or 68060 (soft float; the FPU is used when there is one), an RTG screen, about 8 MB of free memory.
-- For sound: camd.library and a CAMD MIDI driver (a serial MIDI interface to a synthesizer, or a software one). Aria sends to the CAMD cluster `out.0`; set another with `SetEnv SAVE AriaMaestosa/MidiOut <cluster>`. Without CAMD, Aria still writes, edits, prints and saves songs (.aria and MIDI files).
+- For sound: camd.library and the AkikoPlus CAMD driver. Aria sends to `akikoplus.out.0`, whose bytes are rendered by AkikoPlus/OpenSynth; set another CAMD cluster with `SetEnv SAVE AriaMaestosa/MidiOut <cluster>`. Without CAMD, Aria still writes, edits, prints and saves songs (.aria and MIDI files).
 
 ## Install
 

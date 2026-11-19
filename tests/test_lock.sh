@@ -16,6 +16,7 @@ grep -q 'OBJREV=.*TOOLCHAIN_ID' "$HERE/../build-amiga.sh" || { echo "FAIL: Aria 
 grep -q 'WXREV=.*TOOLCHAIN_ID' "$HERE/../build-amiga.sh" || { echo "FAIL: toolkit cache ignores the toolchain"; fail=1; }
 grep -q 'objects.txt' "$HERE/../build-amiga.sh" || { echo "FAIL: linker has no current-object manifest"; fail=1; }
 grep -q '@amiga/CamdMidiManager.cpp' "$HERE/../build-amiga.sh" || { echo "FAIL: project object name depends on checkout path"; fail=1; }
+grep -q 'cluster\[64\] = "akikoplus.out.0"' "$HERE/../amiga/camd_player.c" || { echo "FAIL: AkikoPlus/OpenSynth is not the default MIDI route"; fail=1; }
 if [ "${ARIA_SRC:-}" ]; then
     T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
     cp -R "$ARIA_SRC/." "$T/"

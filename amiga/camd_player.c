@@ -13,7 +13,7 @@
 
 struct Library *CamdBase;
 static APTR node, link;
-static char cluster[64] = "out.0";
+static char cluster[64] = "akikoplus.out.0";
 
 static struct amp_song song;
 static volatile LONG playing, stop_asked;
@@ -38,7 +38,7 @@ int acp_open(void)
     if (link) return 1;
     InitSemaphore(&send_lock);
     if (GetVar((STRPTR)"AriaMaestosa/MidiOut", (STRPTR)cluster, sizeof cluster, GVF_GLOBAL_ONLY) <= 0)
-        strcpy(cluster, "out.0");
+        strcpy(cluster, "akikoplus.out.0");
     if (!CamdBase) CamdBase = OpenLibrary((CONST_STRPTR)"camd.library", 37);
     if (!CamdBase) return 0;
     if (!node) node = camd_CreateMidiA(ntags);

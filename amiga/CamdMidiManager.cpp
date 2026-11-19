@@ -47,7 +47,8 @@ namespace AriaMaestosa
             {
                 m_told = true;
                 wxMessageBox(_("Aria Maestosa plays through CAMD: camd.library and a MIDI driver are needed "
-                               "(the link goes to the cluster named in ENV:AriaMaestosa/MidiOut, else out.0). "
+                               "(the link goes to the cluster named in ENV:AriaMaestosa/MidiOut, "
+                               "else akikoplus.out.0 for AkikoPlus/OpenSynth). "
                                "Songs can still be written and saved as MIDI files."));
             }
             return m_open;
